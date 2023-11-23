@@ -542,6 +542,30 @@ class SubclassCreationMeta:
         # sanity assert to make sure we don't leak memory
         assert is_fake(self.original_subclass)
 
+class ViewAndMutationMetaReduced:
+    # length = # user inputs
+    # This gives us info about every input, and what sort of mutation happened to it (if any)
+    input_info: List[InputAliasInfo]
+
+    # length = # user outputs
+    # This gives us info about every output (mostly around whether it aliases other tensors)
+    #THIS
+    output_info: List[OutputAliasInfo]
+
+
+    def __post_init__(self):
+        mutated_inp_indices = [
+            i for i, m in enumerate(self.input_info)
+            if m.mutation_type in (MutationType.MUTATED_IN_GRAPH, MutationType.MUTATED_OUT_GRAPH)
+        ]
+        # pre-compute the indices of the inputs that are mutated.
+        # When keep_input_mutations is set, we don't need to worry about our epilogue
+        # handling data-only mutations, because we keep them directly in the graph.
+
+
+
+        self.mutated_inp_indices = mutated_inp_indices
+
 
 # This class encapsulates all aliasing + mutation info we need about the forward graph
 # See a more detailed overview of the edge case handling at
